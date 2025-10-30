@@ -6,7 +6,7 @@
         "dotnetRunMessages": true,
         "launchBrowser": true,
         "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
-        "applicationUrl": "http://blazorapp.dev.localhost:5182",
+        "applicationUrl": "http://blazorapp.dev.localhost:5262",
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development"
         }
@@ -16,7 +16,7 @@
         "dotnetRunMessages": true,
         "launchBrowser": true,
         "inspectUri": "{wsProtocol}://{url.hostname}:{url.port}/_framework/debug/ws-proxy?browser={browserInspectUri}",
-        "applicationUrl": "https://blazorapp.dev.localhost:7087;http://blazorapp.dev.localhost:5182",
+        "applicationUrl": "https://blazorapp.dev.localhost:7011;http://blazorapp.dev.localhost:5262",
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development"
         }
