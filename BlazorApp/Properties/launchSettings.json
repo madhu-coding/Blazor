@@ -5,7 +5,7 @@
         "commandName": "Project",
         "dotnetRunMessages": true,
         "launchBrowser": true,
-        "applicationUrl": "http://blazorapp.dev.localhost:5025",
+        "applicationUrl": "http://blazorapp.dev.localhost:5175",
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development"
         }
@@ -14,7 +14,7 @@
         "commandName": "Project",
         "dotnetRunMessages": true,
         "launchBrowser": true,
-        "applicationUrl": "https://blazorapp.dev.localhost:7001;http://blazorapp.dev.localhost:5025",
+        "applicationUrl": "https://blazorapp.dev.localhost:7039;http://blazorapp.dev.localhost:5175",
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development"
         }
