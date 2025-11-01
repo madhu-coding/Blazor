@@ -1,0 +1,354 @@
+@page "/image-classifier"
+@using BlazorApp.Services
+@using Microsoft.AspNetCore.Components.Forms
+@inject ImageClassificationService ClassificationService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>AI Image Classifier</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+      <h1 class="display-4 mb-4">
+      ?? AI Image Classifier
+             <small class="text-muted fs-6">Powered by ML.NET</small>
+ </h1>
+            
+  <div class="alert alert-info" role="alert">
+       <strong>Demo Mode:</strong> This classifier uses simplified heuristics for demonstration. 
+           Upload an image to see how it categorizes humans, animals, and objects!
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+    <!-- Upload Section -->
+        <div class="col-lg-6 mb-4">
+         <div class="card shadow-sm">
+ <div class="card-header bg-primary text-white">
+      <h5 class="card-title mb-0">?? Upload Image</h5>
+             </div>
+        <div class="card-body">
+        <div class="mb-3">
+         <label for="imageUpload" class="form-label">Choose an image file</label>
+     <InputFile id="imageUpload" 
+     class="form-control" 
+        OnChange="HandleImageUpload" 
+  accept="image/*" 
+          disabled="@isProcessing" />
+           <div class="form-text">
+           Supports: JPG, PNG, GIF, BMP (Max: 5MB)
+             </div>
+         </div>
+             
+    @if (uploadedImage != null)
+          {
+        <div class="text-center mb-3">
+    <img src="@uploadedImage" 
+          alt="Uploaded image" 
+            class="img-fluid rounded border"
+  style="max-height: 300px; max-width: 100%;" />
+   </div>
+   
+   <button class="btn btn-success btn-lg w-100" 
+             @onclick="ClassifyImage" 
+               disabled="@(isProcessing || uploadedImageData == null)">
+    @if (isProcessing)
+    {
+          <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+    <span>Analyzing...</span>
+      }
+      else
+       {
+  <i class="bi bi-magic"></i>
+    <span>Classify Image</span>
+      }
+       </button>
+ }
+      </div>
+    </div>
+  </div>
+
+     <!-- Results Section -->
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm">
+    <div class="card-header bg-success text-white">
+    <h5 class="card-title mb-0">?? Classification Results</h5>
+  </div>
+     <div class="card-body">
+  @if (classificationResult != null)
+   {
+    <div class="alert @GetAlertClass() alert-dismissible" role="alert">
+   <h6 class="alert-heading">
+        @GetResultIcon() Classification Complete
+       </h6>
+     <p class="mb-2">
+                  <strong>@classificationResult.GetClassificationResult()</strong>
+             </p>
+             
+      @if (!string.IsNullOrEmpty(classificationResult.ErrorMessage))
+     {
+     <hr>
+     <p class="mb-0">
+        <small>Please try with a different image or check the file format.</small>
+         </p>
+   }
+          else
+              {
+         <div class="row mt-3">
+          <div class="col-6">
+         <strong>Category:</strong><br>
+           <span class="badge bg-secondary">@GetCategory(classificationResult.PredictedLabel)</span>
+      </div>
+   <div class="col-6">
+               <strong>Confidence:</strong><br>
+    <div class="progress" style="height: 20px;">
+           <div class="progress-bar @GetProgressBarClass()" 
+        role="progressbar" 
+            style="width: @(classificationResult.Confidence * 100)%">
+      @classificationResult.ConfidencePercentage
+      </div>
+          </div>
+          </div>
+        </div>
+       }
+       </div>
+    }
+    else
+   {
+   <div class="text-center text-muted py-5">
+    <i class="bi bi-image display-4 mb-3"></i>
+             <p>Upload and classify an image to see results here.</p>
+       </div>
+         }
+        </div>
+       </div>
+        </div>
+    </div>
+
+    <!-- Sample Images Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+  <h5 class="card-title mb-0">??? Try Sample Images</h5>
+    </div>
+    <div class="card-body">
+       <p class="text-muted">
+    Don't have an image handy? Try these sample categories:
+           </p>
+     <div class="row">
+          <div class="col-md-4 mb-2">
+           <button class="btn btn-outline-primary btn-sm w-100" 
+     @onclick='() => LoadSampleImage("human")'>
+    ?? Human Sample
+       </button>
+      </div>
+ <div class="col-md-4 mb-2">
+        <button class="btn btn-outline-success btn-sm w-100" 
+      @onclick='() => LoadSampleImage("animal")'>
+ ?? Animal Sample
+        </button>
+      </div>
+     <div class="col-md-4 mb-2">
+       <button class="btn btn-outline-warning btn-sm w-100" 
+    @onclick='() => LoadSampleImage("object")'>
+    ?? Object Sample
+  </button>
+       </div>
+     </div>
+     <small class="text-muted">
+             Note: Sample images will generate demo classifications for testing purposes.
+       </small>
+  </div>
+   </div>
+  </div>
+    </div>
+</div>
+
+@code {
+    private string? uploadedImage;
+    private byte[]? uploadedImageData;
+    private bool isProcessing = false;
+    private ImagePrediction? classificationResult;
+
+    private async Task HandleImageUpload(InputFileChangeEventArgs e)
+ {
+        var file = e.File;
+        
+if (file == null) return;
+
+        // Validate file size (5MB max)
+        if (file.Size > 5 * 1024 * 1024)
+        {
+  classificationResult = new ImagePrediction
+            {
+   PredictedLabel = "Error",
+        ErrorMessage = "File size exceeds 5MB limit. Please choose a smaller image."
+            };
+            return;
+        }
+
+   // Validate file type
+    var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif", "image/bmp" };
+        if (!allowedTypes.Contains(file.ContentType))
+        {
+      classificationResult = new ImagePrediction
+       {
+            PredictedLabel = "Error",
+       ErrorMessage = "Unsupported file type. Please upload a JPG, PNG, GIF, or BMP image."
+      };
+  return;
+      }
+
+        try
+        {
+    // Read file data
+            var buffer = new byte[file.Size];
+         await file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024).ReadAsync(buffer);
+       
+   uploadedImageData = buffer;
+
+            // Create data URL for preview
+   var base64 = Convert.ToBase64String(buffer);
+    uploadedImage = $"data:{file.ContentType};base64,{base64}";
+            
+            // Clear previous results
+         classificationResult = null;
+        }
+     catch (Exception ex)
+        {
+        classificationResult = new ImagePrediction
+  {
+         PredictedLabel = "Error",
+        ErrorMessage = $"Failed to load image: {ex.Message}"
+   };
+        }
+    }
+
+ private async Task ClassifyImage()
+    {
+        if (uploadedImageData == null) return;
+
+        isProcessing = true;
+        classificationResult = null;
+        StateHasChanged();
+
+   try
+        {
+  classificationResult = await ClassificationService.ClassifyImageAsync(uploadedImageData);
+   }
+        catch (Exception ex)
+    {
+   classificationResult = new ImagePrediction
+       {
+      PredictedLabel = "Error",
+        ErrorMessage = $"Classification failed: {ex.Message}"
+         };
+        }
+        finally
+        {
+      isProcessing = false;
+      StateHasChanged();
+      }
+    }
+
+   private async Task LoadSampleImage(string category)
+    {
+   // Generate a simple sample image with colored pixels for demo
+        var random = new Random();
+      var width = 200;
+     var height = 200;
+        var imageData = new byte[width * height * 4]; // RGBA
+
+        // Generate different patterns based on category
+        for (int i = 0; i < imageData.Length; i += 4)
+   {
+            switch (category.ToLower())
+    {
+     case "human":
+// Skin-tone like colors
+      imageData[i] = (byte)(200 + random.Next(55));     // R
+         imageData[i + 1] = (byte)(150 + random.Next(50)); // G
+        imageData[i + 2] = (byte)(100 + random.Next(30)); // B
+           imageData[i + 3] = 255;                 // A
+          break;
+      case "animal":
+            // Earth-tone like colors
+   imageData[i] = (byte)(100 + random.Next(100));    // R
+     imageData[i + 1] = (byte)(80 + random.Next(80));     // G
+     imageData[i + 2] = (byte)(40 + random.Next(60));     // B
+ imageData[i + 3] = 255;       // A
+break;
+      case "object":
+           // Blue-ish colors (like sky/electronic)
+   imageData[i] = (byte)(50 + random.Next(50));      // R
+         imageData[i + 1] = (byte)(50 + random.Next(50));     // G
+         imageData[i + 2] = (byte)(150 + random.Next(105));   // B
+        imageData[i + 3] = 255;    // A
+      break;
+            }
+  }
+
+     // Convert to base64 for display
+        uploadedImageData = imageData;
+      var base64 = Convert.ToBase64String(imageData);
+        uploadedImage = $"data:image/png;base64,{base64}";
+        
+     // Clear previous results
+        classificationResult = null;
+        StateHasChanged();
+    }
+
+    private string GetCategory(string label)
+    {
+        var humanLabels = new[] { "human", "person" };
+      var animalLabels = new[] { "bird", "dog", "cat", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe" };
+        
+        if (humanLabels.Contains(label.ToLower()))
+            return "Human";
+        else if (animalLabels.Contains(label.ToLower()))
+         return "Animal";
+        else
+      return "Object";
+ }
+
+    private string GetAlertClass()
+    {
+  if (classificationResult?.ErrorMessage != null)
+   return "alert-danger";
+        
+      var confidence = classificationResult?.Confidence ?? 0;
+        if (confidence > 0.8f)
+            return "alert-success";
+        else if (confidence > 0.6f)
+     return "alert-warning";
+        else
+         return "alert-info";
+    }
+
+    private string GetProgressBarClass()
+    {
+        var confidence = classificationResult?.Confidence ?? 0;
+        if (confidence > 0.8f)
+        return "bg-success";
+     else if (confidence > 0.6f)
+      return "bg-warning";
+        else
+   return "bg-info";
+    }
+
+    private string GetResultIcon()
+ {
+        if (classificationResult?.ErrorMessage != null)
+      return "?";
+    
+        var confidence = classificationResult?.Confidence ?? 0;
+  if (confidence > 0.8f)
+     return "?";
+        else if (confidence > 0.6f)
+     return "??";
+      else
+      return "??";
+    }
+}

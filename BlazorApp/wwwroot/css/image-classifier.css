@@ -1,0 +1,64 @@
+/* Bootstrap Icon overrides for navigation */
+.bi-house-door-fill-nav-menu::before { content: "\f425"; }
+.bi-plus-square-fill-nav-menu::before { content: "\f505"; }
+.bi-list-nested-nav-menu::before { content: "\f478"; }
+.bi-camera-fill-nav-menu::before { content: "\f2f5"; }
+.bi-magic::before { content: "\f7bb"; }
+.bi-image::before { content: "\f433"; }
+
+/* Image Classifier specific styles */
+.card {
+    transition: box-shadow 0.15s ease-in-out;
+    border-radius: 12px;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+}
+
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.alert {
+    border-radius: 10px;
+}
+
+.btn {
+    border-radius: 8px;
+    transition: all 0.15s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Spinner animation for loading states */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.spinner-border-sm {
+    animation: spin 1s linear infinite;
+}
+
+/* Image preview styling */
+.img-fluid {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Progress bar colors */
+.progress-bar.bg-success {
+    background-color: #28a745 !important;
+}
+
+.progress-bar.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+.progress-bar.bg-info {
+    background-color: #17a2b8 !important;
+}
